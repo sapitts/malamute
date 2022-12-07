@@ -2,6 +2,7 @@
 
 [GlobalParams]
   displacements = 'disp_x disp_y'
+  volumetric_locking_correction = false
 []
 
 [Mesh]
@@ -10,9 +11,9 @@
     dim = 2
     nx = 100
     ny = 51
-    xmax = 1
+    xmax = 0.1
     ymin = 0.0
-    ymax = 1
+    ymax = 0.1
     boundary_name_prefix = moving_block
     elem_type = QUAD8
   []
@@ -26,10 +27,10 @@
     dim = 2
     nx = 100
     ny = 50
-    xmin = 1
-    xmax = 2
+    xmin = 0.1
+    xmax = 0.2
     ymin = 0
-    ymax = 1
+    ymax = 0.12
     boundary_name_prefix = fixed_block
     boundary_id_offset = 4
     elem_type = QUAD8
@@ -50,7 +51,7 @@
     new_block = 'left_block right_block'
   []
   patch_update_strategy = iteration
-  second_order = true
+  # second_order = true
 []
 
 [Problem]
@@ -58,33 +59,34 @@
   reference_vector = 'ref'
   extra_tag_vectors = 'ref'
   converge_on = 'disp_x disp_y temperature potential'
+  group_variables = 'disp_x disp_y'
 []
 
 [Variables]
   [disp_x]
     block = 'left_block right_block'
-    order = SECOND
+    # order = SECOND
   []
   [disp_y]
     block = 'left_block right_block'
-    order = SECOND
+    # order = SECOND
   []
   [temperature]
     initial_condition = 300.0
     block = 'left_block right_block'
-    order = SECOND
-  []
-  [temperature_interface_lm]
-    block = 'interface_secondary_subdomain'
-    order = SECOND
+    # order = SECOND
   []
   [potential]
     block = 'left_block right_block'
-    order = SECOND
+    # order = SECOND
+  []
+  [temperature_interface_lm]
+    block = 'interface_secondary_subdomain'
+    # order = SECOND
   []
   [potential_interface_lm]
     block = 'interface_secondary_subdomain'
-    order = SECOND
+    # order = SECOND
   []
 []
 
@@ -147,17 +149,29 @@
     value = 0
     boundary = 'moving_block_bottom fixed_block_bottom'
   []
-  [fixed_outer_edge]
+  # [fixed_right_block]
+  #   type = ADDirichletBC
+  #   variable = disp_x
+  #   value = 0
+  #   boundary = 'fixed_block_right'
+  # []
+  # [pressure_left_block]
+  #   type = ADPressure
+  #   variable = disp_x
+  #   boundary = 'moving_block_left'
+  #   function = 'if(t<1.0, (20.7e6/1.0)*t, 20.7e6)'
+  # []
+  [fixed_left_block]
     type = ADDirichletBC
     variable = disp_x
     value = 0
-    boundary = 'fixed_block_right'
+    boundary = 'moving_block_left'
   []
-  [displacement_left_block]
+  [pressure_right_block]
     type = ADPressure
     variable = disp_x
-    function = '1.0e6*t'
-    boundary = 'moving_block_left'
+    boundary = 'fixed_block_right'
+    function = 'if(t<1.0, (20.7e6/1.0)*t, 20.7e6)'
   []
   [temperature_left]
     type = ADDirichletBC
@@ -181,7 +195,7 @@
   [electric_right]
     type = ADFunctionDirichletBC
     variable = potential
-    function = '3.0e-2*t'
+    function = 'if(t<80.0, 2.5e-2*t, 2.0)'
     boundary = fixed_block_right
   []
 []
@@ -191,6 +205,7 @@
     primary = moving_block_right
     secondary = fixed_block_left
     model = frictionless
+    c_normal = 1e8
     formulation = mortar
     correct_edge_dropping = true
     use_dual = true
@@ -326,27 +341,33 @@
 [Executioner]
   type = Transient
   solve_type = NEWTON
-  automatic_scaling = true
+  automatic_scaling = false
   line_search = 'none'
 
-  # force running options
-  petsc_options_iname = '-pc_type -snes_linesearch_type -pc_factor_shift_type -pc_factor_shift_amount'
-  petsc_options_value = 'lu       basic                 NONZERO               1e-15'
+  # # force running options
+  # petsc_options_iname = '-pc_type -snes_linesearch_type -pc_factor_shift_type -pc_factor_shift_amount'
+  # petsc_options_value = 'lu       basic                 NONZERO               1e-15'
 
   # mortar contact solver options
-  # petsc_options = '-snes_converged_reason -pc_svd_monitor'
-  # petsc_options_iname = '-pc_type -pc_factor_mat_solver_type'
-  # petsc_options_value = ' lu       superlu_dist'
-  # snesmf_reuse_base = false
+  petsc_options = '-snes_converged_reason -pc_svd_monitor'
+  petsc_options_iname = '-pc_type -pc_factor_mat_solver_type'
+  petsc_options_value = ' lu       superlu_dist'
+  snesmf_reuse_base = false
 
-  nl_rel_tol = 1e-6
-  nl_abs_tol = 1e-10
+  nl_rel_tol = 1e-6 #1e-6 #1e-8 couldn't converge with 1e-3 dt in the first timestep in 20 nl iterations
+  nl_abs_tol = 2e-8 #1e-16 couldn't converge past the first timestep on temperature #1e-10
   nl_max_its = 20
   nl_forced_its = 2
-  l_max_its = 100
+  l_max_its = 50
 
-  dt = 1.0e-3
-  end_time = 20
+  dtmax = 10
+  end_time = 680
+  [TimeStepper]
+    type = IterationAdaptiveDT
+    dt = 1.0e-3
+    optimal_iterations = 8
+    iteration_window = 2
+  []
 []
 
 [Outputs]
