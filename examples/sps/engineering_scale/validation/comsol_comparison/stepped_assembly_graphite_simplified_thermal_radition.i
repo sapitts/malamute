@@ -12,14 +12,14 @@
 [Mesh]
   [graphite_assembly]
     type = FileMeshGenerator
-    file = 'graphite_only_stepped_15mm_diameter20mm_simplified_thermal_radiation_2d.e'
+    file = 'graphite_only_stepped_15mm_diameter20mm_foil_gap_simplified_thermal_radiation_2d.e'
   []
-  [pyrometer_node]
-    type = ExtraNodesetGenerator
-    coord = '0.0136406 0 0'
-    new_boundary = 'pyrometer_node'
-    input = graphite_assembly
-  []
+  # [pyrometer_node]
+  #   type = ExtraNodesetGenerator
+  #   coord = '0.0136406 0 0'
+  #   new_boundary = 'pyrometer_node'
+  #   input = graphite_assembly
+  # []
   # [upper_shank_primary]
   #   type = LowerDBlockFromSidesetGenerator
   #   sidesets = 'upper_die_wall_inside'
@@ -83,13 +83,13 @@
   patch_update_strategy = iteration
 []
 
-[Problem]
-  type = ReferenceResidualProblem
-  reference_vector = 'ref'
-  extra_tag_vectors = 'ref'
-  # converge_on = 'disp_x disp_y temperature potential'
-  # group_variables = 'disp_x disp_y'
-[]
+# [Problem]
+#   type = ReferenceResidualProblem
+#   reference_vector = 'ref'
+#   extra_tag_vectors = 'ref'
+#   # converge_on = 'disp_x disp_y temperature potential'
+#   # group_variables = 'disp_x disp_y'
+# []
 
 # [Variables]
 #   [temperature]
@@ -201,7 +201,7 @@
       additional_generate_output = 'vonmises_stress l2norm_mechanical_strain'
       additional_material_output_family = MONOMIAL
       additional_material_output_order = FIRST
-      extra_vector_tags = 'ref'
+      # extra_vector_tags = 'ref'
       # eigenstrain_names = 'graphite_thermal_expansion'
       block = 'upper_ram_spacer upper_spacer upper_plunger_shank die_wall lower_plunger_shank lower_spacer lower_ram_spacer'
     []
@@ -321,7 +321,7 @@
     preset = true
     variable = disp_y
     value = 0
-    boundary = 'lower_ram_spacer_bottom'
+    boundary = 'lower_ram_spacer_bottom lower_die_wall_bottom'
   []
   [top_pressure_ydirection]
     type = ADPressure
@@ -537,28 +537,29 @@
   # compute_scaling_once = false
 
   # force running options
-  petsc_options_iname = '-pc_type -snes_linesearch_type -pc_factor_shift_type -pc_factor_shift_amount'
-  petsc_options_value = 'lu       basic                 NONZERO               1e-15'
+  # petsc_options_iname = '-pc_type -snes_linesearch_type -pc_factor_shift_type -pc_factor_shift_amount'
+  # petsc_options_value = 'lu       basic                 NONZERO               1e-15'
 
   # #mechanical contact options
   # petsc_options = '-snes_ksp_ew'
-  # petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
-  # petsc_options_value = ' lu       superlu_dist'
-  # petsc_options = '-snes_converged_reason -ksp_converged_reason'
+  petsc_options_iname = '-pc_type -pc_factor_mat_solver_package'
+  petsc_options_value = ' lu       superlu_dist'
+  petsc_options = '-snes_converged_reason -ksp_converged_reason'
+  snesmf_reuse_base = false
 
   nl_forced_its = 1
   nl_rel_tol = 1e-6 #1e-6 #2e-5 for with mechanics #was 1e-10, for temperature only
-  nl_abs_tol = 1e-12 #was 1e-12
+  nl_abs_tol = 1e-12 #was 1e-12 for using auto scaling
   nl_max_its = 20
   l_max_its = 50
-  # dtmin = 1.0e-4
+  dtmin = 1.0e-10
   dtmax = 500
 
   end_time = 3000 #600 #900 #15 minutes, rule of thumb from Dennis is 10 minutes
 
   [TimeStepper]
     type = IterationAdaptiveDT
-    dt = 0.05
+    dt = 5.0e-4
     optimal_iterations = 8
     iteration_window = 2
   []
@@ -601,12 +602,18 @@
   #   point = '0.01375 0 0'
   #   use_displaced_mesh = false
   # []
+  [pyrometer_point]
+    type = PointValue
+    variable = disp_x
+    point = '0.01375 0 0'
+  []
 []
 
 [Outputs]
   csv = true
   exodus = true
   perf_graph = true
+  color = false
   # [ckpt]
   #   type =Checkpoint
   #   interval = 1
