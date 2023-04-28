@@ -153,7 +153,7 @@
     type = ParsedAux
     variable = heat_transfer_radiation
     boundary = 'top_ram_spacer_right top_sinter_spacer_right'
-    args = 'temperature'
+    coupled_variables = 'temperature'
     constant_names = 'boltzmann epsilon temperature_farfield' #published emissivity for graphite is 0.85
     constant_expressions = '5.67e-8 0.85 300.0' #roughly room temperature, which is probably too cold
     function = '-boltzmann*epsilon*(temperature^4-temperature_farfield^4)'

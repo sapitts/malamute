@@ -147,15 +147,17 @@
   [electric_field_x]
     family = MONOMIAL #prettier pictures with smoother values
     order = FIRST
+    block = 'top_ram_spacer top_sinter_spacer top_punch'
   []
   [electric_field_y]
     family = MONOMIAL
     order = FIRST
+    block = 'top_ram_spacer top_sinter_spacer top_punch'
   []
-  [current_density]
-    family = NEDELEC_ONE
-    order = FIRST
-  []
+  # [current_density]
+  #   family = NEDELEC_ONE
+  #   order = FIRST
+  # []
 []
 
 [Modules]
@@ -237,12 +239,12 @@
     component = y
     block = 'top_ram_spacer top_sinter_spacer top_punch'
   []
-  [current_density]
-    type = ADCurrentDensity
-    variable = current_density
-    potential = potential
-    block = 'top_ram_spacer top_sinter_spacer top_punch'
-  []
+  # [current_density]
+  #   type = ADCurrentDensity
+  #   variable = current_density
+  #   potential = potential
+  #   block = 'top_ram_spacer top_sinter_spacer top_punch'
+  # []
 []
 
 [Functions]
