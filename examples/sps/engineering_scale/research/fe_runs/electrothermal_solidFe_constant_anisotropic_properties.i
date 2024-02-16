@@ -620,10 +620,17 @@ stack_with_powder = ${fparse ram_cc_sinter_punch_height + powder_height}
              top_punch top_sinter_spacer top_ram_spacer die_wall'
   []
 
-  [HeatDiff_carbon_fiber]
-    type = ADHeatConduction
+  # [HeatDiff_carbon_fiber]
+  #   type = ADHeatConduction
+  #   variable = temperature
+  #   thermal_conductivity = ccfiber_thermal_conductivity
+  #   extra_vector_tags = 'ref'
+  #   block = 'bottom_cc_spacer top_cc_spacer'
+  # []
+  [HeatDiff_anistropic_carbon_fiber]
+    type = ADMatAnisoDiffusion
+    diffusivity = ccfiber_aniso_thermal_conductivity
     variable = temperature
-    thermal_conductivity = ccfiber_thermal_conductivity
     extra_vector_tags = 'ref'
     block = 'bottom_cc_spacer top_cc_spacer'
   []
@@ -1092,9 +1099,20 @@ stack_with_powder = ${fparse ram_cc_sinter_punch_height + powder_height}
   [carbon_fiber_electro_thermal_properties]
     type = ADGenericConstantMaterial
     prop_names = 'ccfiber_density ccfiber_thermal_conductivity ccfiber_heat_capacity ccfiber_electrical_conductivity ccfiber_hardness'
-    prop_values = ' 1.5e3                 20                         1.5e3                   5.88e4                           1.0' #from CF datasheet (Schunk CFC - Fibra de carbon.pdf)
+    prop_values = ' 1.5e3                 5                         1.5e3                   5.88e4                           1.0' #from CF datasheet (Schunk CFC - Fibra de carbon.pdf)
     block = 'bottom_cc_spacer top_cc_spacer bottom_ram_cc_secondary_subdomain
              top_sinter_cc_secondary_subdomain'
+  []
+  [carbon_fiber_anisotropic_thermal_cond]
+    # type = ADGenericConstantRankTwoTensor
+    # tensor_name = ccfiber_aniso_thermal_conductivity
+    # # tensor values are column major-ordered
+    # tensor_values = '40.0 0 0 0 5.0 0 0 0 40.0'
+    type = ADConstantAnisotropicMobility
+    tensor = '40 0 0
+              0  5 0
+              0  0 40'
+    M_name = ccfiber_aniso_thermal_conductivity
   []
   [iron_electro_thermal_properties]
     type = ADGenericConstantMaterial
