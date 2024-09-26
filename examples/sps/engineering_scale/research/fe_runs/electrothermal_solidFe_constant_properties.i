@@ -1096,10 +1096,60 @@ stack_with_powder = ${fparse ram_cc_sinter_punch_height + powder_height}
     block = 'bottom_cc_spacer top_cc_spacer bottom_ram_cc_secondary_subdomain
              top_sinter_cc_secondary_subdomain'
   []
+
+  [fe_density_powder]
+    type = ADGenericConstantMaterial
+    prop_names = 'iron_density'
+    prop_values = 7874.0
+    #Density data from K. C. Mills, "Recommended values of thermophysical properties for selected
+    #commercial alloys", in units of kg/m^3 at 298K
+    output_properties = 'iron_density'
+    outputs = exodus
+    block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
+             inside_powder_secondary_subdomain'
+  []
+  [iron_heat_capacity_powder]
+    type = ADGenericConstantMaterial
+    prop_names = 'iron_heat_capacity'
+    prop_values = '   25.09'
+    #Value at 298K, heat capacity in units of J/mol/K
+    #https://webbook.nist.gov/cgi/cbook.cgi?ID=C7439896&Units=SI&Mask=2&Type=JANAFS&Table=on
+    output_properties = 'iron_heat_capacity'
+    outputs = exodus
+    block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
+             inside_powder_secondary_subdomain'
+  []
+
+  [iron_electrical_conductivity_powder]
+    type = ADGenericConstantMaterial
+    prop_names = 'iron_electrical_conductivity'
+    prop_values = '9.876e6'
+    #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
+    #Table VII, ORNL high purity samples
+    #conductivity in units of S/m at 298K
+    output_properties = 'iron_electrical_conductivity'
+    outputs = exodus
+    block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
+             inside_powder_secondary_subdomain'
+  []
+
+  [iron_thermal_conductivity_powder]
+    type = ADGenericConstantMaterial
+    prop_names = iron_thermal_conductivity
+    prop_values = '2.711e4'
+    #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
+    #Table III, ORNL high purity samples, piecewise curve fit this work
+    #thermal conductivity in units of W/m-K at 298K
+    output_properties = 'iron_thermal_conductivity'
+    outputs = exodus
+    block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
+             inside_powder_secondary_subdomain'
+  []
+
   [iron_electro_thermal_properties]
     type = ADGenericConstantMaterial
-    prop_names = 'iron_density iron_thermal_conductivity iron_heat_capacity iron_electrical_conductivity iron_hardness'
-    prop_values = ' 7.8e3            79.5                     0.45e3             1.0e7                         1.0' #from G535 datasheet
+    prop_names = 'iron_hardness'
+    prop_values = '   1.0' # assumed unity to remove influence of hardenss
     block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
              inside_powder_secondary_subdomain'
   []

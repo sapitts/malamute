@@ -294,12 +294,29 @@ stack_with_powder = ${fparse ram_cc_sinter_punch_height + powder_height}
                  powder top_punch top_sinter_spacer top_cc_spacer top_ram_spacer die_wall'
   []
 
+  [uncovered_bottom_punch_right]
+    type = SideSetsFromBoundingBoxGenerator
+    input = block_rename
+    bottom_left = '${fparse punch_radius - 1.0e-3} ${fparse ram_cc_sinter_spacers_height + sinter_spacer_overhang_height + 1.0e-4} 0.0'
+    top_right = '${fparse punch_radius + 1.0e-3} ${fparse ram_cc_sinter_punch_height + (powder_height - die_wall_height) / 2.0 - 1.0e-4} 0.0'
+    boundary_new = 'uncovered_bottom_punch_right'
+    included_boundaries = 'bottom_punch_right'
+  []
+  [uncovered_top_punch_right]
+    type = SideSetsFromBoundingBoxGenerator
+    input = uncovered_bottom_punch_right
+    bottom_left = '${fparse punch_radius - 1.0e-3} ${fparse ram_cc_sinter_punch_height + (powder_height + die_wall_height) / 2.0 + 1.0e-4} 0.0'
+    top_right = '${fparse punch_radius + 1.0e-3} ${fparse stack_with_powder + punch_height - sinter_spacer_overhang_height - 1.0e-4} 0.0'
+    boundary_new = 'uncovered_top_punch_right'
+    included_boundaries = 'top_punch_right'
+  []
+
   [bottom_ram_cc_primary_subdomain]
     type = LowerDBlockFromSidesetGenerator
     sidesets = 'bottom_ram_spacer_top'
     new_block_id = 111
     new_block_name = 'bottom_ram_cc_primary_subdomain'
-    input = block_rename
+    input = uncovered_top_punch_right
   []
   [bottom_ram_cc_secondary_subdomain]
     type = LowerDBlockFromSidesetGenerator
@@ -437,6 +454,35 @@ stack_with_powder = ${fparse ram_cc_sinter_punch_height + powder_height}
     input = inside_powder_secondary_subdomain
   []
 
+  [gap_bottom_sinter_die_primary_subdomain]
+    type = LowerDBlockFromSidesetGenerator
+    sidesets = 'bottom_sinter_spacer_overhang_top'
+    new_block_id = 3111
+    new_block_name = 'gap_bottom_sinter_die_primary_subdomain'
+    input = inside_top_punch_secondary_subdomain
+  []
+  [gap_bottom_sinter_die_secondary_subdomain]
+    type = LowerDBlockFromSidesetGenerator
+    sidesets = 'die_wall_bottom'
+    new_block_id = 1022
+    new_block_name = 'gap_bottom_sinter_die_secondary_subdomain'
+    input = gap_bottom_sinter_die_primary_subdomain
+  []
+  [gap_top_sinter_die_primary_subdomain]
+    type = LowerDBlockFromSidesetGenerator
+    sidesets = 'top_sinter_spacer_overhang_bottom'
+    new_block_id = 7222
+    new_block_name = 'gap_top_sinter_die_primary_subdomain'
+    input = gap_bottom_sinter_die_secondary_subdomain
+  []
+  [gap_top_sinter_die_secondary_subdomain]
+    type = LowerDBlockFromSidesetGenerator
+    sidesets = 'die_wall_top'
+    new_block_id = 1011
+    new_block_name = 'gap_top_sinter_die_secondary_subdomain'
+    input = gap_top_sinter_die_primary_subdomain
+  []
+
   patch_update_strategy = iteration
   second_order = true
   coord_type = RZ
@@ -548,6 +594,15 @@ stack_with_powder = ${fparse ram_cc_sinter_punch_height + powder_height}
   []
   [potential_inside_top_punch_lm]
     block = 'inside_top_punch_secondary_subdomain'
+    order = SECOND
+  []
+
+  [temperature_gap_top_sinter_die_lm]
+    block = 'gap_top_sinter_die_secondary_subdomain'
+    order = SECOND
+  []
+  [temperature_gap_bottom_sinter_die_lm]
+    block = 'gap_bottom_sinter_die_secondary_subdomain'
     order = SECOND
   []
 []
@@ -697,14 +752,10 @@ stack_with_powder = ${fparse ram_cc_sinter_punch_height + powder_height}
     type = ParsedAux
     variable = heat_transfer_radiation
     boundary = 'bottom_ram_spacer_right bottom_ram_spacer_overhang_right bottom_cc_spacer_right
-                bottom_sinter_spacer_right bottom_sinter_spacer_overhang_right
-                top_sinter_spacer_overhang_right top_sinter_spacer_right die_wall_right
+                bottom_sinter_spacer_right bottom_sinter_spacer_overhang_right uncovered_bottom_punch_right
+                top_sinter_spacer_overhang_right top_sinter_spacer_right die_wall_right uncovered_top_punch_right
                 top_cc_spacer_right top_ram_spacer_overhang_right top_ram_spacer_right'
-    # boundary = 'bottom_ram_spacer_right bottom_ram_spacer_overhang_right bottom_cc_spacer_right
-    #             bottom_sinter_spacer_right bottom_sinter_spacer_overhang_right bottom_punch_right
-    #             die_wall_right top_punch_right top_sinter_spacer_overhang_right top_sinter_spacer_right
-    #             top_cc_spacer_right top_ram_spacer_overhang_right top_ram_spacer_right'
-                coupled_variables = 'temperature'
+    coupled_variables = 'temperature'
     constant_names = 'boltzmann epsilon temperature_farfield' #published emissivity for graphite is 0.85
     constant_expressions = '5.67e-8 0.85 300.0' #roughly room temperature, which is probably too cold
     expression = '-boltzmann*epsilon*(temperature^4-temperature_farfield^4)'
@@ -738,10 +789,6 @@ stack_with_powder = ${fparse ram_cc_sinter_punch_height + powder_height}
     y = '  0   0 ${fparse 518/ram_spacer_surface_area} ${fparse 521/ram_spacer_surface_area} ${fparse 253/ram_spacer_surface_area} ${fparse 691/ram_spacer_surface_area} ${fparse 693/ram_spacer_surface_area} ${fparse 716/ram_spacer_surface_area} ${fparse 721/ram_spacer_surface_area}   ${fparse 1/ram_spacer_surface_area}    0    0'
     scale_factor = 1.0
   []
-  # [current_application]
-  #   type = ParsedFunction
-  #   expression = 'current_from_file/ ${ram_spacer_surface_area}'
-  # []
 []
 
 [BCs]
@@ -756,8 +803,8 @@ stack_with_powder = ${fparse ram_cc_sinter_punch_height + powder_height}
     variable = temperature
     v = heat_transfer_radiation
     boundary = 'bottom_ram_spacer_right bottom_ram_spacer_overhang_right bottom_cc_spacer_right
-                bottom_sinter_spacer_right bottom_sinter_spacer_overhang_right
-                top_sinter_spacer_overhang_right top_sinter_spacer_right die_wall_right
+                bottom_sinter_spacer_right bottom_sinter_spacer_overhang_right uncovered_bottom_punch_right
+                top_sinter_spacer_overhang_right top_sinter_spacer_right die_wall_right uncovered_top_punch_right
                 top_cc_spacer_right top_ram_spacer_overhang_right top_ram_spacer_right'
   []
   [electric_top]
@@ -1083,90 +1130,248 @@ stack_with_powder = ${fparse ram_cc_sinter_punch_height + powder_height}
     correct_edge_dropping = true
     # use_displaced_mesh = true
   []
+
+  [thermal_gap_contact_interface_bottom_sinter_die]
+    type = ModularGapConductanceConstraint
+    variable = temperature_gap_bottom_sinter_die_lm
+    secondary_variable = temperature
+    primary_boundary = bottom_sinter_spacer_overhang_top
+    primary_subdomain = gap_bottom_sinter_die_primary_subdomain
+    secondary_boundary = die_wall_bottom
+    secondary_subdomain = gap_bottom_sinter_die_secondary_subdomain
+    gap_geometry_type = PLATE
+    gap_flux_models = 'gap_thermal_interface_bottom_sinter_die'
+    extra_vector_tags = 'ref'
+    correct_edge_dropping = true
+    # use_displaced_mesh = true
+  []
+  [thermal_gap_contact_interface_top_sinter_die]
+    type = ModularGapConductanceConstraint
+    variable = temperature_gap_top_sinter_die_lm
+    secondary_variable = temperature
+    primary_boundary = top_sinter_spacer_overhang_bottom
+    primary_subdomain = gap_top_sinter_die_primary_subdomain
+    secondary_boundary = die_wall_top
+    secondary_subdomain = gap_top_sinter_die_secondary_subdomain
+    gap_geometry_type = PLATE
+    gap_flux_models = 'gap_thermal_interface_top_sinter_die'
+    extra_vector_tags = 'ref'
+    correct_edge_dropping = true
+    # use_displaced_mesh = true
+  []
 []
 
 [Materials]
   [graphite_electro_thermal_properties]
     type = ADGenericConstantMaterial
     prop_names = 'graphite_density graphite_thermal_conductivity graphite_heat_capacity graphite_electrical_conductivity graphite_hardness'
-    prop_values = ' 1.82e3               81                           1.5e3                   5.88e4                           1.0' #from G535 datasheet
+    prop_values = '        1.82e3           81                            1.303e3                5.88e4                           1.0'
     block = 'bottom_ram_spacer bottom_sinter_spacer bottom_punch
              top_punch top_sinter_spacer top_ram_spacer die_wall
              bottom_cc_sinter_secondary_subdomain bottom_sinter_punch_secondary_subdomain
              top_punch_sinter_secondary_subdomain top_cc_ram_secondary_subdomain
              inside_low_punch_secondary_subdomain inside_top_punch_secondary_subdomain'
+    # density (kg/m^3), thermal conductivity (W/m-K), and electrical conductivity (S/m) from manufacture datasheet for G535,
+    #           available at http://schunk-tokai.pl/pl/wp-content/uploads/Schunk-Tokai-2015-englisch.pdf
+    # specific heat capacity for IG110 graphite, https://www.nrc.gov/docs/ML2121/ML21215A346.pdf, equation on pg A-40 at 293K,
   []
   [carbon_fiber_electro_thermal_properties]
     type = ADGenericConstantMaterial
     prop_names = 'ccfiber_density ccfiber_thermal_conductivity ccfiber_heat_capacity ccfiber_electrical_conductivity ccfiber_hardness'
-    prop_values = ' 1.5e3                 5                         1.5e3                   5.88e4                           1.0' #from CF datasheet (Schunk CFC - Fibra de carbon.pdf)
-    block = 'bottom_cc_spacer top_cc_spacer bottom_ram_cc_secondary_subdomain
-             top_sinter_cc_secondary_subdomain'
+    prop_values = ' 1.5e3                 5.0                     1.25e3                   4.0e4                           1.0'
+    block = 'bottom_cc_spacer top_cc_spacer bottom_ram_cc_secondary_subdomain top_sinter_cc_secondary_subdomain'
+    # density (kg/m^3) and electrical conductivity (S/m) from Schunk CF226 manufacturer's datasheet, available at http://schunk-tokai.pl/en/wp-content/uploads/e_CF-226.pdf
+    # thermal conductivity (W/m-K), perpendicular to fiber direction, from Schunk CF226 manufacturer's datasheet, available at http://schunk-tokai.pl/en/wp-content/uploads/e_CF-226.pdf
+    # specific heat capacity (J/kg-K) from Sommers et al. App. Thermal Engineering 30(11-12) (2010) 1277-1291 for Schunk FU2952
+    # hardness set to unity to remove dependence on that quantity
   []
   [carbon_fiber_anisotropic_thermal_cond]
-    # type = ADGenericConstantRankTwoTensor
-    # tensor_name = ccfiber_aniso_thermal_conductivity
-    # # tensor values are column major-ordered
-    # tensor_values = '40.0 0 0 0 5.0 0 0 0 40.0'
     type = ADConstantAnisotropicMobility
     tensor = '40 0 0
               0  5 0
               0  0 40'
     M_name = ccfiber_aniso_thermal_conductivity
+    # data sourced from Schunk CF226 manufacturer's datasheet, available at http://schunk-tokai.pl/en/wp-content/uploads/e_CF-226.pdf
   []
+
+  ### Vary the iron electrothermal properties
+
   [fe_density_powder]
-    type = ADGenericConstantMaterial
-    prop_names = 'iron_density'
-    prop_values = 7874.0
+    type = ADDerivativeParsedMaterial
+    property_name = 'iron_density'
+    coupled_variables = 'temperature'
+    constant_names = 'alpha_V'
+    constant_expressions = '43.5e-6' #alpha_V units of K^{-1}
+    expression = 'iron_density:=if(temperature<1184, 7874/(1 + alpha_V*(temperature- 298)),
+                     7650 - 0.51*(temperature - 1184)); iron_density'
     #Density data from K. C. Mills, "Recommended values of thermophysical properties for selected
-    #commercial alloys", in units of kg/m^3 at 298K
+    #commercial alloys", in units of kg/m^3
     output_properties = 'iron_density'
     outputs = exodus
-    block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
-             inside_powder_secondary_subdomain'
+    block = 'powder'
   []
   [iron_heat_capacity_powder]
-    type = ADGenericConstantMaterial
-    prop_names = 'iron_heat_capacity'
-    prop_values = '   25.09'
-    #Value at 298K, heat capacity in units of J/mol/K
+    type = ADDerivativeParsedMaterial
+    property_name = iron_heat_capacity
+    coupled_variables = 'temperature'
+    constant_names = '      A1        B1        C1        D1        E1
+                            A2        B2        C2        D2        E2
+                            A3        B3        C3        D3        E3
+                            A4        B4        C4        D4        E4
+                            A5        B5        C5        D5        E5'
+    constant_expressions = '18.42868  24.64301  -8.913720 9.664706  -0.012643
+                            -57767.65 137919.7  -122773.2 38682.42  3993.080
+                            -325.8859 28.92876  0         0         411.9629
+                            -776.7387 919.4005  -383.7184 57.08148  242.1369
+                            23.97449  8.367750  0.000277  -0.000086 -0.000005'
+    expression = 'iron_heat_capacity:=if(temperature<700, A1 + B1*(temperature/1000) + C1*(temperature/1000)^2 + D1*(temperature/1000)^3 + E1/(temperature/1000)^2,
+                    if(temperature<1043, A2 + B2*(temperature/1000) + C2*(temperature/1000)^2 + D2*(temperature/1000)^3 + E2/(temperature/1000)^2,
+                    if(temperature<1100, A3 + B3*(temperature/1000) + C3*(temperature/1000)^2 + D3*(temperature/1000)^3 + E3/(temperature/1000)^2,
+                    if(temperature<1185, A4 + B4*(temperature/1000) + C4*(temperature/1000)^2 + D4*(temperature/1000)^3 + E4/(temperature/1000)^2,
+                     A5 + B5*(temperature/1000) + C5*(temperature/1000)^2 + D5*(temperature/1000)^3 + E5/(temperature/1000)^2)))); iron_heat_capacity'
+    #Fit to specific heat in J/mol/K from NIST Chemistry Webbook page
     #https://webbook.nist.gov/cgi/cbook.cgi?ID=C7439896&Units=SI&Mask=2&Type=JANAFS&Table=on
+    #heat capacity in units of J/mol/K
     output_properties = 'iron_heat_capacity'
     outputs = exodus
-    block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
-             inside_powder_secondary_subdomain'
+    block = 'powder'
   []
 
   [iron_electrical_conductivity_powder]
-    type = ADGenericConstantMaterial
-    prop_names = 'iron_electrical_conductivity'
-    prop_values = '9.876e6'
+    type = ADDerivativeParsedMaterial
+    property_name = iron_electrical_conductivity
+    coupled_variables = 'temperature'
+    constant_names = '      Ab      Bb        Cb        Aa      Ba        Da        Ag    Bg'
+    constant_expressions = '-4.696  4.519e-2  5.119e-8  65.07   4.051e-2  -2.625e-4 68.47 3.69e-2'
+    expression = 'rho:=if(temperature<1043, Ab + Bb*temperature + Cb*temperature^3,
+                    if(temperature<1183, Aa + Ba*temperature + Da*(1183 - temperature)^2, Ag + Bg*temperature)); 1 / (1e-8 * rho)'
+    #b = alpha (ferrite) phase below Curie temp, a = alpha phase above Curie temp, g = gamma phase
     #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
     #Table VII, ORNL high purity samples
-    #conductivity in units of S/m at 298K
+    #rho in units of micro-ohm*cm, conductivity in units of S/m
     output_properties = 'iron_electrical_conductivity'
     outputs = exodus
-    block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
-             inside_powder_secondary_subdomain'
+    block = 'powder'
+  []
+  [iron_electrical_conductivity_bottom_punch_powder]
+    type = ADDerivativeParsedMaterial
+    property_name = iron_electrical_conductivity
+    coupled_variables = 'temperature_bottom_punch_powder_lm'
+    constant_names = '      Ab      Bb        Cb        Aa      Ba        Da        Ag    Bg'
+    constant_expressions = '-4.696  4.519e-2  5.119e-8  65.07   4.051e-2  -2.625e-4 68.47 3.69e-2'
+    expression = 'rho:=if(temperature_bottom_punch_powder_lm<1043, Ab + Bb*temperature_bottom_punch_powder_lm + Cb*temperature_bottom_punch_powder_lm^3,
+                    if(temperature_bottom_punch_powder_lm<1183, Aa + Ba*temperature_bottom_punch_powder_lm + Da*(1183 - temperature_bottom_punch_powder_lm)^2,
+                       Ag + Bg*temperature_bottom_punch_powder_lm)); 1 / (1e-8 * rho)'
+    #b = alpha (ferrite) phase below Curie temp, a = alpha phase above Curie temp, g = gamma phase
+    #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
+    #Table VII, ORNL high purity samples
+    #rho in units of micro-ohm*cm, conductivity in units of S/m
+    output_properties = 'iron_electrical_conductivity'
+    outputs = exodus
+    block = 'bottom_punch_powder_secondary_subdomain'
+  []
+  [iron_electrical_conductivity_powder_top_punch]
+    type = ADDerivativeParsedMaterial
+    property_name = iron_electrical_conductivity
+    coupled_variables = 'temperature_powder_top_punch_lm'
+    constant_names = '      Ab      Bb        Cb        Aa      Ba        Da        Ag    Bg'
+    constant_expressions = '-4.696  4.519e-2  5.119e-8  65.07   4.051e-2  -2.625e-4 68.47 3.69e-2'
+    expression = 'rho:=if(temperature_powder_top_punch_lm<1043, Ab + Bb*temperature_powder_top_punch_lm + Cb*temperature_powder_top_punch_lm^3,
+                    if(temperature_powder_top_punch_lm<1183, Aa + Ba*temperature_powder_top_punch_lm + Da*(1183 - temperature_powder_top_punch_lm)^2,
+                       Ag + Bg*temperature_powder_top_punch_lm)); 1 / (1e-8 * rho)'
+    #b = alpha (ferrite) phase below Curie temp, a = alpha phase above Curie temp, g = gamma phase
+    #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
+    #Table VII, ORNL high purity samples
+    #rho in units of micro-ohm*cm, conductivity in units of S/m
+    output_properties = 'iron_electrical_conductivity'
+    outputs = exodus
+    block = 'powder_top_punch_secondary_subdomain'
+  []
+  [iron_electrical_conductivity_inside_powder]
+    type = ADDerivativeParsedMaterial
+    property_name = iron_electrical_conductivity
+    coupled_variables = 'temperature_inside_powder_lm'
+    constant_names = '      Ab      Bb        Cb        Aa      Ba        Da        Ag    Bg'
+    constant_expressions = '-4.696  4.519e-2  5.119e-8  65.07   4.051e-2  -2.625e-4 68.47 3.69e-2'
+    expression = 'rho:=if(temperature_inside_powder_lm<1043, Ab + Bb*temperature_inside_powder_lm + Cb*temperature_inside_powder_lm^3,
+                    if(temperature_inside_powder_lm<1183, Aa + Ba*temperature_inside_powder_lm + Da*(1183 - temperature_inside_powder_lm)^2,
+                       Ag + Bg*temperature_inside_powder_lm)); 1 / (1e-8 * rho)'
+    #b = alpha (ferrite) phase below Curie temp, a = alpha phase above Curie temp, g = gamma phase
+    #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
+    #Table VII, ORNL high purity samples
+    #rho in units of micro-ohm*cm, conductivity in units of S/m
+    output_properties = 'iron_electrical_conductivity'
+    outputs = exodus
+    block = 'inside_powder_secondary_subdomain'
   []
 
   [iron_thermal_conductivity_powder]
-    type = ADGenericConstantMaterial
-    prop_names = iron_thermal_conductivity
-    prop_values = '2.711e4'
+    type = ADDerivativeParsedMaterial
+    property_name = iron_thermal_conductivity
+    coupled_variables = 'temperature'
+    constant_names = '      Ab       Bb       Ba      Ag       Bg'
+    constant_expressions = '-0.0591  90.971   29.6    0.0224   1.2286'
+    expression = 'iron_thermal_conductivity:=if(temperature<1073, Ab + Bb*temperature,
+                    if(temperature<1173, Ba, Ag + Bg*temperature)); iron_thermal_conductivity'
     #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
     #Table III, ORNL high purity samples, piecewise curve fit this work
-    #thermal conductivity in units of W/m-K at 298K
+    #thermal conductivity in units of W/m-K
     output_properties = 'iron_thermal_conductivity'
     outputs = exodus
-    block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
-             inside_powder_secondary_subdomain'
+    block = 'powder'
+  []
+  [iron_thermal_conductivity_bottom_punch_powder]
+    type = ADDerivativeParsedMaterial
+    property_name = iron_thermal_conductivity
+    coupled_variables = 'temperature_bottom_punch_powder_lm'
+    constant_names = '      Ab       Bb       Ba      Ag       Bg'
+    constant_expressions = '-0.0591  90.971   29.6    0.0224   1.2286'
+    expression = 'iron_thermal_conductivity:=if(temperature_bottom_punch_powder_lm<1073, Ab + Bb*temperature_bottom_punch_powder_lm,
+                    if(temperature_bottom_punch_powder_lm<1173, Ba, Ag + Bg*temperature_bottom_punch_powder_lm)); iron_thermal_conductivity'
+    #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
+    #Table III, ORNL high purity samples, piecewise curve fit this work
+    #thermal conductivity in units of W/m-K
+    output_properties = 'iron_thermal_conductivity'
+    outputs = exodus
+    block = 'bottom_punch_powder_secondary_subdomain'
+  []
+  [iron_thermal_conductivity_powder_top_punch]
+    type = ADDerivativeParsedMaterial
+    property_name = iron_thermal_conductivity
+    coupled_variables = 'temperature_powder_top_punch_lm'
+    constant_names = '      Ab       Bb       Ba      Ag       Bg'
+    constant_expressions = '-0.0591  90.971   29.6    0.0224   1.2286'
+    expression = 'iron_thermal_conductivity:=if(temperature_powder_top_punch_lm<1073, Ab + Bb*temperature_powder_top_punch_lm,
+                    if(temperature_powder_top_punch_lm<1173, Ba, Ag + Bg*temperature_powder_top_punch_lm)); iron_thermal_conductivity'
+    #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
+    #Table III, ORNL high purity samples, piecewise curve fit this work
+    #thermal conductivity in units of W/m-K
+    output_properties = 'iron_thermal_conductivity'
+    outputs = exodus
+    block = 'powder_top_punch_secondary_subdomain'
+  []
+  [iron_thermal_conductivity_inside_powder]
+    type = ADDerivativeParsedMaterial
+    property_name = iron_thermal_conductivity
+    coupled_variables = 'temperature_inside_powder_lm'
+    constant_names = '      Ab       Bb       Ba      Ag       Bg'
+    constant_expressions = '-0.0591  90.971   29.6    0.0224   1.2286'
+    expression = 'iron_thermal_conductivity:=if(temperature_inside_powder_lm<1073, Ab + Bb*temperature_inside_powder_lm,
+                    if(temperature_inside_powder_lm<1173, Ba, Ag + Bg*temperature_inside_powder_lm)); iron_thermal_conductivity'
+    #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
+    #Table III, ORNL high purity samples, piecewise curve fit this work
+    #thermal conductivity in units of W/m-K
+    output_properties = 'iron_thermal_conductivity'
+    outputs = exodus
+    block = 'inside_powder_secondary_subdomain'
   []
 
   [iron_electro_thermal_properties]
     type = ADGenericConstantMaterial
     prop_names = 'iron_hardness'
-    prop_values = '   1.0' # assumed unity to remove influence of hardenss
+    prop_values = '   1.0' # assumed unity
+    # prop_names = 'iron_density iron_thermal_conductivity iron_heat_capacity iron_electrical_conductivity iron_hardness'
+    # prop_values = ' 7.8e3            79.5                     0.45e3             1.0e7                         1.0' #from G535 datasheet
     block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
              inside_powder_secondary_subdomain'
   []
@@ -1435,6 +1640,21 @@ stack_with_powder = ${fparse ram_cc_sinter_punch_height + powder_height}
     primary_hardness = graphite_hardness
     secondary_hardness = graphite_hardness
     boundary = top_punch_right
+  []
+
+  [gap_thermal_interface_bottom_sinter_die]
+    type = GapFluxModelConduction
+    temperature = temperature
+    boundary = die_wall_bottom
+    gap_conductivity = 0.0306  # W/m-K for argon at 600K: https://www.engineersedge.com/heat_transfer/thermal-conductivity-gases.htm
+    # use_displaced_mesh = true
+  []
+  [gap_thermal_interface_top_sinter_die]
+    type = GapFluxModelConduction
+    temperature = temperature
+    boundary = die_wall_top
+    gap_conductivity = 0.0306  # W/m-K for argon at 600K: https://www.engineersedge.com/heat_transfer/thermal-conductivity-gases.htm
+    # use_displaced_mesh = true
   []
 []
 
