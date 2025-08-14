@@ -23,7 +23,7 @@ die_wall_inner_radius = 0.006125
 die_wall_outer_radius = 0.020
 die_wall_height = 0.030
 
-contact_scale_factor = 1.0e0
+contact_scale_factor = 1.0e-4
 
 #######################################################################################
 ### Calculated values from user-provided results
@@ -75,7 +75,7 @@ stack_with_powder = '${fparse ram_cc_sinter_punch_height + powder_height}'
   [bottom_cc_spacer]
     type = GeneratedMeshGenerator
     dim = 2
-    nx = 68
+    nx = 69 #(n*2 +1)
     ny = 14
     xmax = ${cc_spacer_radius}
     ymin = ${ram_spacer_height}
@@ -127,7 +127,7 @@ stack_with_powder = '${fparse ram_cc_sinter_punch_height + powder_height}'
   [bottom_punch]
     type = GeneratedMeshGenerator
     dim = 2
-    nx = 42
+    nx = 43 #(n*2 +1)
     ny = 78 #38 # 43 #42
     xmax = ${punch_radius}
     ymin = ${ram_cc_sinter_spacers_height}
@@ -163,7 +163,7 @@ stack_with_powder = '${fparse ram_cc_sinter_punch_height + powder_height}'
   [top_punch]
     type = GeneratedMeshGenerator
     dim = 2
-    nx = 42
+    nx = 43 #(n*2 +1)
     ny = 78 #38 # 43 #42
     xmax = ${punch_radius}
     ymin = ${stack_with_powder}
@@ -215,7 +215,7 @@ stack_with_powder = '${fparse ram_cc_sinter_punch_height + powder_height}'
   [top_cc_spacer]
     type = GeneratedMeshGenerator
     dim = 2
-    nx = 68
+    nx = 69 #(n*2 +1)
     ny = 14
     xmax = ${cc_spacer_radius}
     ymin = '${fparse stack_with_powder + ram_cc_sinter_punch_height - ram_cc_spacers_height}'
@@ -269,7 +269,7 @@ stack_with_powder = '${fparse ram_cc_sinter_punch_height + powder_height}'
     type = GeneratedMeshGenerator
     dim = 2
     nx = 102 #31 #21
-    ny = 302 #87 #43
+    ny = 303 #(n*2 +1) #87 #43
     xmin = ${die_wall_inner_radius}
     xmax = ${die_wall_outer_radius}
     ymin = '${fparse ram_cc_sinter_punch_height + (powder_height - die_wall_height) / 2.0}'
@@ -1807,7 +1807,7 @@ stack_with_powder = '${fparse ram_cc_sinter_punch_height + powder_height}'
   end_time = 1600
   [TimeStepper]
     type = IterationAdaptiveDT
-    dt = 10.0
+    dt = 1.0e-4
     optimal_iterations = 8
     iteration_window = 2
     force_step_every_function_point = true

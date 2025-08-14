@@ -1301,8 +1301,8 @@ stack_with_powder = '${fparse ram_cc_sinter_punch_height + powder_height}'
 [Materials]
   [graphite_electro_thermal_properties]
     type = ADGenericConstantMaterial
-    prop_names = 'graphite_density graphite_thermal_conductivity graphite_heat_capacity graphite_electrical_conductivity graphite_hardness'
-    prop_values = '        1.82e3           81                            1.303e3                5.88e4                           1.0'
+    prop_names = 'graphite_density graphite_heat_capacity graphite_hardness'
+    prop_values = '        1.82e3                                     1.303e3                                           1.0'
     block = 'bottom_ram_spacer bottom_sinter_spacer bottom_punch
              top_punch top_sinter_spacer top_ram_spacer die_wall
              bottom_cc_sinter_secondary_subdomain bottom_sinter_punch_secondary_subdomain
@@ -1311,6 +1311,108 @@ stack_with_powder = '${fparse ram_cc_sinter_punch_height + powder_height}'
     # density (kg/m^3), thermal conductivity (W/m-K), and electrical conductivity (S/m) from manufacture datasheet for G535,
     #           available at http://schunk-tokai.pl/pl/wp-content/uploads/Schunk-Tokai-2015-englisch.pdf
     # specific heat capacity for IG110 graphite, https://www.nrc.gov/docs/ML2121/ML21215A346.pdf, equation on pg A-40 at 293K,
+  []
+  [graphite_temp_dependent_thermal_conductivity]
+    type = ADParsedMaterial
+    property_name = graphite_thermal_conductivity
+    coupled_variables = temperature
+    expression = '9.97e-5*((temperature-273.15)*(temperature-273.15)) - 8.36e-2*(temperature-273.15) + 60.8'
+    block = 'bottom_ram_spacer bottom_cc_spacer bottom_sinter_spacer bottom_punch
+             powder top_punch top_sinter_spacer top_cc_spacer top_ram_spacer die_wall'
+    #relationship experimentally deduced using measured diffusivity, specific heat capaciy, and supplier specific gravity
+  []
+  [graphite_temp_dependent_thermal_conductivity_bottom_cc_sinter]
+    type = ADParsedMaterial
+    property_name = graphite_thermal_conductivity
+    coupled_variables = temperature_bottom_cc_sinter_lm
+    expression = '9.97e-5*((temperature_bottom_cc_sinter_lm-273.15)*(temperature_bottom_cc_sinter_lm-273.15)) - 8.36e-2*(temperature_bottom_cc_sinter_lm-273.15) + 60.8'
+    block = 'bottom_cc_sinter_secondary_subdomain'
+  []
+  [graphite_temp_dependent_thermal_conductivity_bottom_sinter_punch]
+    type = ADParsedMaterial
+    property_name = graphite_thermal_conductivity
+    coupled_variables = temperature_bottom_sinter_punch_lm
+    expression = '9.97e-5*((temperature_bottom_sinter_punch_lm-273.15)*(temperature_bottom_sinter_punch_lm-273.15)) - 8.36e-2*(temperature_bottom_sinter_punch_lm-273.15) + 60.8'
+    block = 'bottom_sinter_punch_secondary_subdomain'
+  []
+  [graphite_temp_dependent_thermal_conductivity_top_punch_sinter]
+    type = ADParsedMaterial
+    property_name = graphite_thermal_conductivity
+    coupled_variables = temperature_top_punch_sinter_lm
+    expression = '9.97e-5*((temperature_top_punch_sinter_lm-273.15)*(temperature_top_punch_sinter_lm-273.15)) - 8.36e-2*(temperature_top_punch_sinter_lm-273.15) + 60.8'
+    block = 'top_punch_sinter_secondary_subdomain'
+  []
+  [graphite_temp_dependent_thermal_conductivity_top_cc_ram]
+    type = ADParsedMaterial
+    property_name = graphite_thermal_conductivity
+    coupled_variables = temperature_top_cc_ram_lm
+    expression = '9.97e-5*((temperature_top_cc_ram_lm-273.15)*(temperature_top_cc_ram_lm-273.15)) - 8.36e-2*(temperature_top_cc_ram_lm-273.15) + 60.8'
+    block = 'top_cc_ram_secondary_subdomain'
+  []
+  [graphite_temp_dependent_thermal_conductivity_inside_low_punch]
+    type = ADParsedMaterial
+    property_name = graphite_thermal_conductivity
+    coupled_variables = temperature_inside_low_punch_lm
+    expression = '9.97e-5*((temperature_inside_low_punch_lm-273.15)*(temperature_inside_low_punch_lm-273.15)) - 8.36e-2*(temperature_inside_low_punch_lm-273.15) + 60.8'
+    block = 'inside_low_punch_secondary_subdomain'
+  []
+  [graphite_temp_dependent_thermal_conductivity_inside_top_punch]
+    type = ADParsedMaterial
+    property_name = graphite_thermal_conductivity
+    coupled_variables = temperature_inside_top_punch_lm
+    expression = '9.97e-5*((temperature_inside_top_punch_lm-273.15)*(temperature_inside_top_punch_lm-273.15)) - 8.36e-2*(temperature_inside_top_punch_lm-273.15) + 60.8'
+    block = 'inside_top_punch_secondary_subdomain'
+  []
+  [graphite_temp_dependent_electrical_conductivity]
+    type = ADParsedMaterial
+    property_name = graphite_electrical_conductivity
+    coupled_variables = temperature
+    expression = '-4.14e-2 * ((temperature-273.15) * (temperature-273.15)) + 9.66e+1 * (temperature-273.15) + 3.07e+4'
+    block = 'bottom_ram_spacer bottom_cc_spacer bottom_sinter_spacer bottom_punch
+             powder top_punch top_sinter_spacer top_cc_spacer top_ram_spacer die_wall'
+    #relationship experimentally deduced using measured diffusivity, specific heat capaciy, and supplier specific gravity
+  []
+  [graphite_temp_dependent_electrical_conductivity_bottom_cc_sinter]
+    type = ADParsedMaterial
+    property_name = graphite_electrical_conductivity
+    coupled_variables = temperature_bottom_cc_sinter_lm
+    expression = '-4.14e-2 * ((temperature_bottom_cc_sinter_lm-273.15) * (temperature_bottom_cc_sinter_lm-273.15)) + 9.66e+1 * (temperature_bottom_cc_sinter_lm-273.15) + 3.07e+4'
+    block = 'bottom_cc_sinter_secondary_subdomain'
+  []
+  [graphite_temp_dependent_electrical_conductivity_bottom_sinter_punch]
+    type = ADParsedMaterial
+    property_name = graphite_electrical_conductivity
+    coupled_variables = temperature_bottom_sinter_punch_lm
+    expression = '-4.14e-2 * ((temperature_bottom_sinter_punch_lm-273.15) * (temperature_bottom_sinter_punch_lm-273.15)) + 9.66e+1 * (temperature_bottom_sinter_punch_lm-273.15) + 3.07e+4'
+    block = 'bottom_sinter_punch_secondary_subdomain'
+  []
+  [graphite_temp_dependent_electrical_conductivity_top_punch_sinter]
+    type = ADParsedMaterial
+    property_name = graphite_electrical_conductivity
+    coupled_variables = temperature_top_punch_sinter_lm
+    expression = '-4.14e-2 * ((temperature_top_punch_sinter_lm-273.15) * (temperature_top_punch_sinter_lm-273.15)) + 9.66e+1 * (temperature_top_punch_sinter_lm-273.15) + 3.07e+4'
+    block = 'top_punch_sinter_secondary_subdomain'
+  []
+  [graphite_temp_dependent_electrical_conductivity_top_cc_ram]
+    type = ADParsedMaterial
+    property_name = graphite_electrical_conductivity
+    coupled_variables = temperature_top_cc_ram_lm
+    expression = '-4.14e-2 * ((temperature_top_cc_ram_lm-273.15) * (temperature_top_cc_ram_lm-273.15)) + 9.66e+1 * (temperature_top_cc_ram_lm-273.15) + 3.07e+4'
+    block = 'top_cc_ram_secondary_subdomain'
+  []
+  [graphite_temp_dependent_electrical_conductivity_inside_low_punch]
+    type = ADParsedMaterial
+    property_name = graphite_electrical_conductivity
+    coupled_variables = temperature_inside_low_punch_lm
+    expression = '-4.14e-2 * ((temperature_inside_low_punch_lm-273.15) * (temperature_inside_low_punch_lm-273.15)) + 9.66e+1 * (temperature_inside_low_punch_lm-273.15) + 3.07e+4'
+    block = 'inside_low_punch_secondary_subdomain'
+  []
+  [graphite_temp_dependent_electrical_conductivity_inside_top_punch]
+    type = ADParsedMaterial
+    property_name = graphite_electrical_conductivity
+    coupled_variables = temperature_inside_top_punch_lm
+    expression = '-4.14e-2 * ((temperature_inside_top_punch_lm-273.15) * (temperature_inside_top_punch_lm-273.15)) + 9.66e+1 * (temperature_inside_top_punch_lm-273.15) + 3.07e+4'
+    block = 'inside_top_punch_secondary_subdomain'
   []
   [graphite_elasticity_tensor]
     type = ADComputeIsotropicElasticityTensor
@@ -1413,30 +1515,74 @@ stack_with_powder = '${fparse ram_cc_sinter_punch_height + powder_height}'
              inside_powder_secondary_subdomain'
   []
 
-  [iron_electrical_conductivity_powder]
-    type = ADGenericConstantMaterial
-    prop_names = 'iron_electrical_conductivity'
-    prop_values = '9.876e6'
-    #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
-    #Table VII, ORNL high purity samples
-    #conductivity in units of S/m at 298K
-    output_properties = 'iron_electrical_conductivity'
-    outputs = exodus
-    block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
-             inside_powder_secondary_subdomain'
-  []
-
-  [iron_thermal_conductivity_powder]
-    type = ADGenericConstantMaterial
-    prop_names = iron_thermal_conductivity
-    prop_values = '2.711e4'
+  [iron_temp_dependent_electrical_conductivity]
+    type = ADParsedMaterial
+    property_name = iron_electrical_conductivity
+    coupled_variables = temperature
+    expression = '(1.06e-3 * ((temperature-273.15) * (temperature-273.15)) - 1.74 * (temperature) + 7.93e+2)'
+    block = 'powder'
     #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
     #Table III, ORNL high purity samples, piecewise curve fit this work
-    #thermal conductivity in units of W/m-K at 298K
-    output_properties = 'iron_thermal_conductivity'
-    outputs = exodus
-    block = 'powder bottom_punch_powder_secondary_subdomain powder_top_punch_secondary_subdomain
-             inside_powder_secondary_subdomain'
+    #thermal conductivity in units of W/m-K
+  []
+
+  [iron_temp_dependent_electrical_conductivity_bottom_punch_powder]
+    type = ADParsedMaterial
+    property_name = iron_electrical_conductivity
+    coupled_variables = temperature_bottom_punch_powder_lm
+    expression = '(1.06e-3 * ((temperature_bottom_punch_powder_lm-273.15) * (temperature_bottom_punch_powder_lm-273.15)) - 1.74 * (temperature_bottom_punch_powder_lm) + 7.93e+2)'
+    block = 'bottom_punch_powder_secondary_subdomain'
+  []
+
+  [iron_temp_dependent_electrical_conductivity_powder_top_punch]
+    type = ADParsedMaterial
+    property_name = iron_electrical_conductivity
+    coupled_variables = temperature_powder_top_punch_lm
+    expression = '(1.06e-3 * ((temperature_powder_top_punch_lm-273.15) * (temperature_powder_top_punch_lm-273.15)) - 1.74 * (temperature_powder_top_punch_lm) + 7.93e+2)'
+    block = 'powder_top_punch_secondary_subdomain'
+  []
+
+  [iron_temp_dependent_electrical_conductivity_inside_powder]
+    type = ADParsedMaterial
+    property_name = iron_electrical_conductivity
+    coupled_variables = temperature_inside_powder_lm
+    expression = '(1.06e-3 * ((temperature_inside_powder_lm-273.15) * (temperature_inside_powder_lm-273.15)) - 1.74 * (temperature_inside_powder_lm) + 7.93e+2)'
+    block = 'inside_powder_secondary_subdomain'
+  []
+
+  [iron_temp_dependent_thermal_conductivity]
+    type = ADParsedMaterial
+    property_name = iron_thermal_conductivity
+    coupled_variables = temperature
+    expression = '4.6e-5 * ((temperature-273.15) * (temperature-273.15)) - 9.76e-2 * (temperature-273.15) + 7.99e+1'
+    block = 'powder'
+    #Data from Fulkerson et al., J. Applied Physics, 37, pp. 2639-2653 (1966)
+    #Table III, ORNL high purity samples, piecewise curve fit this work
+    #thermal conductivity in units of W/m-K
+  []
+
+  [iron_temp_dependent_thermal_conductivity_bottom_punch_powder]
+    type = ADParsedMaterial
+    property_name = iron_thermal_conductivity
+    coupled_variables = temperature_bottom_punch_powder_lm
+    expression = '4.6e-5 * ((temperature_bottom_punch_powder_lm-273.15) * (temperature_bottom_punch_powder_lm-273.15)) - 9.76e-2 * (temperature_bottom_punch_powder_lm-273.15) + 7.99e+1'
+    block = 'bottom_punch_powder_secondary_subdomain'
+  []
+
+  [iron_temp_dependent_thermal_conductivity_powder_top_punch]
+    type = ADParsedMaterial
+    property_name = iron_thermal_conductivity
+    coupled_variables = temperature_powder_top_punch_lm
+    expression = '4.6e-5 * ((temperature_powder_top_punch_lm-273.15) * (temperature_powder_top_punch_lm-273.15)) - 9.76e-2 * (temperature_powder_top_punch_lm-273.15) + 7.99e+1'
+    block = 'powder_top_punch_secondary_subdomain'
+  []
+
+  [iron_temp_dependent_thermal_conductivity_inside_powder]
+    type = ADParsedMaterial
+    property_name = iron_thermal_conductivity
+    coupled_variables = temperature_inside_powder_lm
+    expression = '4.6e-5 * ((temperature_inside_powder_lm-273.15) * (temperature_inside_powder_lm-273.15)) - 9.76e-2 * (temperature_inside_powder_lm-273.15) + 7.99e+1'
+    block = 'inside_powder_secondary_subdomain'
   []
 
   [iron_electro_thermal_properties]
@@ -1765,6 +1911,18 @@ stack_with_powder = '${fparse ram_cc_sinter_punch_height + powder_height}'
     variable = temperature
     point = '0.01375 ${fparse ram_cc_sinter_punch_height + powder_height / 2.0} 0'
   []
+
+  [potential_inside_powder]
+    type = PointValue
+    variable = potential
+    point = '${fparse powder_radius / 2.0} ${fparse ram_cc_sinter_punch_height + powder_height / 2.0} 0'
+  []
+
+  [potential_top_ram]
+    type = SideAverageValue
+    boundary = 'top_ram_spacer_top'
+    variable = potential
+  []
 []
 
 [Preconditioning]
@@ -1807,7 +1965,7 @@ stack_with_powder = '${fparse ram_cc_sinter_punch_height + powder_height}'
   end_time = 1600
   [TimeStepper]
     type = IterationAdaptiveDT
-    dt = 10.0
+    dt = 1.0
     optimal_iterations = 8
     iteration_window = 2
     force_step_every_function_point = true
